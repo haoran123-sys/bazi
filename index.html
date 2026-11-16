@@ -28,6 +28,10 @@ h1 span{color:var(--huo)}
 .field input:focus,.field select:focus{outline:none;border-color:var(--ink)}
 .seg.mode{margin-bottom:2px}
 .seg.mode{grid-template-columns:repeat(3,1fr)}
+.gzrow{display:grid;grid-template-columns:30px 1fr 1fr;gap:8px;align-items:center;margin-top:8px}
+.gzlb{font-size:11px;color:var(--muted);letter-spacing:1px;text-align:center}
+.gzh{font-size:10.5px;color:var(--muted);letter-spacing:2px;text-align:center}
+.gzrow .field label{display:none}
 .hint{font-size:11px;color:var(--muted);letter-spacing:.5px;margin-top:7px;line-height:1.7}
 .seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line2);border-radius:2px;height:42px;overflow:hidden}
 .seg button{background:#fff;border:0;font:15px/1 inherit;color:var(--mid);cursor:pointer}
@@ -128,15 +132,12 @@ h1 span{color:var(--huo)}
     <div class="hint" id="lh">—</div>
   </div>
 
-  <div id="pane-z" style="margin-top:8px;display:none">
-    <div class="grid2" style="margin-top:0">
-      <div class="field"><label>年柱</label><select id="zy"></select></div>
-      <div class="field"><label>月柱</label><select id="zm"></select></div>
-    </div>
-    <div class="grid2">
-      <div class="field"><label>日柱</label><select id="zd"></select></div>
-      <div class="field"><label>时柱</label><select id="zh"></select></div>
-    </div>
+  <div id="pane-z" style="margin-top:2px;display:none">
+    <div class="gzrow"><span class="gzlb"></span><span class="gzh">天干</span><span class="gzh">地支</span></div>
+    <div class="gzrow"><span class="gzlb">年柱</span><div class="field"><select id="zyg"></select></div><div class="field"><select id="zyz"></select></div></div>
+    <div class="gzrow"><span class="gzlb">月柱</span><div class="field"><select id="zmg"></select></div><div class="field"><select id="zmz"></select></div></div>
+    <div class="gzrow"><span class="gzlb">日柱</span><div class="field"><select id="zdg"></select></div><div class="field"><select id="zdz"></select></div></div>
+    <div class="gzrow"><span class="gzlb">时柱</span><div class="field"><select id="zhg"></select></div><div class="field"><select id="zhz"></select></div></div>
   </div>
 
   <div id="pane-time">
@@ -1159,7 +1160,10 @@ function gzHtml(idx){
 
 function run(){
   if (state.mode === 'z'){
-    state.res = baziFromGZ(+$('zy').value, +$('zm').value, +$('zd').value, +$('zh').value, !!state.sex);
+    var idxs = GZP.map(function(ids){
+      return gzIndexOf(+$(ids[0]).value, +$(ids[1]).value);
+    });
+    state.res = baziFromGZ(idxs[0], idxs[1], idxs[2], idxs[3], !!state.sex);
     state.dyIdx = 0; render(); return;
   }
   var y, m, d;
@@ -1197,7 +1201,7 @@ function metaHtml(r){
     ['旬空', r.kongStr]
   ];
   if (r.mode === 'gz'){
-    ss.push(['性别', r.male ? '男命' : '女命'], ['输入', '干支直入']);
+    ss.push(['性别', r.male ? '男命' : '女命']);
   } else {
     ss.push(['大运', r.direction],
       ['起运', r.qiyun.y + ' 岁 ' + r.qiyun.m + ' 月 ' + r.qiyun.d + ' 天'],
@@ -1341,19 +1345,41 @@ var DAY_CN = ['初一','初二','初三','初四','初五','初六','初七','�
   '十一','十二','十三','十四','十五','十六','十七','十八','十九','二十',
   '廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
 
-function gzOptions(){
-  var arr = [];
-  for (var i = 0; i < 60; i++) arr.push('<option value="' + i + '">' + GAN[i % 10] + ZHI[i % 12] + '</option>');
-  return arr.join('');
+var GZP = [['zyg','zyz'], ['zmg','zmz'], ['zdg','zdz'], ['zhg','zhz']];
+
+function ganOptions(){
+  var a = [];
+  for (var i = 0; i < 10; i++) a.push('<option value="' + i + '">' + GAN[i] + '</option>');
+  return a.join('');
+}
+function zhiOptions(gIdx, keepZ){
+  var a = [];
+  for (var z = gIdx % 2; z < 12; z += 2) a.push('<option value="' + z + '">' + ZHI[z] + '</option>');
+  return a.join('');
+}
+function rebuildZhi(zid, gIdx, keepZ){
+  var sel = $(zid);
+  var keep = (keepZ === undefined || keepZ === null) ? null : keepZ;
+  sel.innerHTML = zhiOptions(gIdx, keep);
+  var vals = [].map.call(sel.options, function(o){ return +o.value; });
+  if (keep !== null && vals.indexOf(keep) >= 0) sel.value = String(keep);
+  else sel.value = String(vals[0]);
+  return +sel.value;
 }
 function fillGzSelects(r){
-  ['zy','zm','zd','zh'].forEach(function(id){ $(id).innerHTML = gzOptions(); });
-  if (r){
-    $('zy').value = String(r.pillars[0].idx);
-    $('zm').value = String(r.pillars[1].idx);
-    $('zd').value = String(r.pillars[2].idx);
-    $('zh').value = String(r.pillars[3].idx);
-  }
+  GZP.forEach(function(ids, i){
+    var gSel = $(ids[0]);
+    gSel.innerHTML = ganOptions();
+    var gi = r ? (r.pillars[i].idx % 10) : 0;
+    var zi = r ? (r.pillars[i].idx % 12) : 0;
+    gSel.value = String(gi);
+    rebuildZhi(ids[1], gi, zi);
+  });
+}
+/* 天干序号 g、地支序号 z → 60 甲子序号（同一柱干支必同阴阳） */
+function gzIndexOf(g, z){
+  for (var k = g; k < 60; k += 10) if (k % 12 === z) return k;
+  return g;
 }
 
 /* ===================== 模式切换 ===================== */
@@ -1395,6 +1421,12 @@ function setMode(m){
     });
   }
   $('run').addEventListener('click', run);
+
+  GZP.forEach(function(ids){
+    $(ids[0]).addEventListener('change', function(){
+      rebuildZhi(ids[1], +this.value, null);
+    });
+  });
 
   $('ly').addEventListener('change', rebuildLunarMonth);
   $('ly').addEventListener('input', rebuildLunarMonth);
