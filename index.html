@@ -46,10 +46,9 @@ h1 span{color:var(--huo)}
 .pan .gz .z{margin-top:2px}
 .pan .cang{margin-top:8px;display:flex;flex-direction:column;gap:1px;font-size:10.5px;color:var(--mid)}
 .pan .cang i{font-style:normal;color:var(--muted);font-size:9.5px;margin-left:2px}
-.pan .ny{margin-top:7px;font-size:10.5px;color:var(--mid);letter-spacing:.5px}
 .pan .cs{margin-top:3px;font-size:10.5px;color:var(--muted);letter-spacing:.5px}
-.pan .ss{margin-top:7px;font-size:9.5px;line-height:1.7;color:var(--mid)}
-.pan .ss span{display:inline-block;border:1px solid var(--line2);border-radius:1px;padding:0 3px;margin:1px 1px 0}
+.pan .ss{margin-top:9px;padding-top:7px;border-top:1px dashed var(--line);font-size:10.5px;line-height:1.8}
+.pan .ss span{display:inline-block;border:1px solid var(--ink);border-radius:1px;padding:1px 4px;margin:2px 2px 0;color:var(--ink);letter-spacing:.5px}
 .pan .kong{display:inline-block;border:1px solid var(--ink);border-radius:1px;padding:0 3px;font-size:9.5px;line-height:1.5;margin-top:6px}
 .mu{color:var(--mu)}.huo{color:var(--huo)}.tu{color:var(--tu)}.jin{color:var(--jin)}.shui{color:var(--shui)}
 .wx{margin-top:16px;border:1px solid var(--line);padding:10px 12px 12px}
@@ -495,11 +494,10 @@ function panHtml(r){
       '<div class="god">' + (i === 2 ? '日元' : p.god) + '</div>' +
       gzHtml(p.idx) +
       '<div class="cang">' + cang + '</div>' +
-      '<div class="ny">' + p.nayin + '</div>' +
       '<div class="cs">星运 ' + p.cs + '</div>' +
       '<div class="cs">自坐 ' + p.selfSeat + '</div>' +
       (p.kong ? '<div><span class="kong">空</span></div>' : '') +
-      (shensha ? '<div class="ss">' + shensha + '</div>' : '') +
+      '<div class="ss">' + (shensha || '<span style="border:0;color:#CFCFCF">—</span>') + '</div>' +
       '</div>';
   }).join('');
   return '<div class="pan">' + cols + '</div>';
