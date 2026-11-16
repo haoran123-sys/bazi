@@ -1474,6 +1474,7 @@ function setMode(m){
   $('pane-hm').style.display = (m === 'z' ? 'none' : 'grid');
   $('f-zi').style.display = (m === 'z' ? 'none' : 'block');
   if (m === 'l') rebuildLunarMonth();
+  if (typeof OUT !== 'undefined' && OUT) OUT.innerHTML = '';
 }
 
 (function init(){
