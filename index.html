@@ -92,6 +92,10 @@ h1 span{color:var(--huo)}
 }
 
 /* 四维分析 */
+.ana4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid var(--line2);border-left:1px solid var(--line)}
+.ana4 .c{min-width:0;padding:11px 14px 12px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.ana4 .k{display:block;font-size:9.5px;letter-spacing:3.5px;color:#9A9A9A}
+.ana4 .v{display:block;margin-top:6px;font-family:var(--serif);font-size:16px;font-weight:500;letter-spacing:1.5px;color:var(--ink)}
 .ana{display:grid;grid-template-columns:1fr;gap:10px;margin-top:12px}
 .ana .card{border:1px solid var(--line2);padding:13px 14px 13px;background:#fff}
 .ana .lb{font-size:9.5px;letter-spacing:3.5px;color:#9A9A9A}
@@ -1140,16 +1144,20 @@ function analyzeAll(r){
   return [strong, geju, tiaohou, xingxiang];
 }
 
+function shortOf(c){
+  var t = c.tag;
+  if (t.indexOf('强弱') === 0) return c.hl.split('｜')[0].trim();
+  if (t.indexOf('格局') === 0) return c.hl.split('·')[0].trim();
+  if (t.indexOf('调候') === 0) return c.hl.replace(/（.*?）/g, '').trim();
+  return c.hl;
+}
+
 function analysisHtml(r){
-  var cards = analyzeAll(r).map(function(c){
-    var lines = c.lines.map(function(l){ return '<div class="tx">' + l + '</div>'; }).join('');
-    var tail = c.tail ? '<div class="tx tl">' + c.tail + '</div>' : '';
-    var quote = c.quote ? '<div class="qt">' + c.quote +
-      (c.src ? '<span>' + c.src + '</span>' : '') + '</div>' : '';
-    return '<div class="card"><div class="lb">' + c.tag + '</div>' +
-      '<div class="hl">' + c.hl + '</div>' + lines + tail + quote + '</div>';
+  var cells = analyzeAll(r).map(function(c){
+    return '<div class="c"><span class="k">' + c.tag.replace('分析', '') + '</span>' +
+      '<span class="v">' + shortOf(c) + '</span></div>';
   }).join('');
-  return '<div class="sec-t">四维分析</div><div class="ana">' + cards + '</div>';
+  return '<div class="sec-t">四维分析</div><div class="ana4">' + cells + '</div>';
 }
 
 var OUT, state = {sex:1, zi:1, dyIdx:0, res:null};
