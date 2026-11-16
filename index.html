@@ -79,13 +79,13 @@ h1 span{color:var(--huo)}
 .wheel .nd{fill:#fff;stroke:var(--line);stroke-width:1}
 .wheel .wn.sel .nd{fill:var(--ink);stroke:var(--ink)}
 .wheel .wn.sel .wg,.wheel .wn.sel .wz{fill:#fff}
-.wheel .fst{fill:none;stroke:var(--ink);stroke-width:1;opacity:.5}
-.wheel .nowc{fill:#B4462F}
+.wheel .wlab{font-size:9.5px;fill:var(--ink);letter-spacing:1px}
 .wheel .cg{font-size:26px;font-weight:500;letter-spacing:2px}
 .wheel .cy{font-size:11px;fill:var(--mid);font-variant-numeric:tabular-nums}
 .wheel .ca{font-size:10px;fill:#9A9A9A;letter-spacing:.5px}
 .wheel .mu{fill:var(--mu)}.wheel .huo{fill:var(--huo)}.wheel .tu{fill:var(--tu)}
 .wheel .jin{fill:var(--jin)}.wheel .shui{fill:var(--shui)}
+.wheel .wlab{font-size:9.5px;fill:var(--ink)}
 .wlg{display:flex;gap:16px;justify-content:center;font-size:9.5px;color:#9A9A9A;letter-spacing:1px;margin-top:1px}
 .qy{font-size:12px;color:var(--mid);letter-spacing:.5px;margin-bottom:9px}
 .qy b{font-family:var(--serif);color:var(--ink);font-weight:500}
@@ -1302,13 +1302,16 @@ function dyHtml(r){
     }
     var d = r.daYun[i2];
     var cls = 'wn' + (i2 === state.dyIdx ? ' sel' : '');
-    var first = (i2 === 0) ? '<circle class="fst" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="28"/>' : '';
-    var nowTag = (i2 === now && i2 !== state.dyIdx) ? '<circle class="nowc" cx="' + x.toFixed(1) + '" cy="' + (y + 34).toFixed(1) + '" r="3"/>' : '';
+    var lx = (CX + (R + 31) * Math.cos(ang)).toFixed(1);
+    var ly = (CY + (R + 31) * Math.sin(ang) + 3).toFixed(1);
+    var mark = (i2 === 0 ? '起' : '') + ((i2 === now && !!r.qiyun) ? '今' : '');
+    var lab = mark ? '<text class="wlab" x="' + lx + '" y="' + ly + '">' + mark + '</text>' : '';
+    var first = '';
     nodes += '<g class="' + cls + '" data-i="' + i2 + '">' + first +
       '<circle class="nd" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="23"/>' +
       '<text class="wg ' + wxCls(GAN_WX[d.idx % 10]) + '" x="' + x.toFixed(1) + '" y="' + (y - 3).toFixed(1) + '">' + GAN[d.idx % 10] + '</text>' +
       '<text class="wz ' + wxCls(ZHI_WX[d.idx % 12]) + '" x="' + x.toFixed(1) + '" y="' + (y + 15).toFixed(1) + '">' + ZHI[d.idx % 12] + '</text>' +
-      nowTag + '</g>';
+      '</g>' + lab;
   }
 
   var cur = r.daYun[state.dyIdx];
@@ -1335,8 +1338,8 @@ function dyHtml(r){
       '<circle class="ring" cx="' + CX + '" cy="' + CY + '" r="' + R + '"/>' +
       center + nodes + '</svg></div>' +
     '<div class="wlg">' + (r.qiyun
-      ? '<span>○ 起运</span><span>● 现在</span><span>点地支看该运流年</span>'
-      : '<span>○ 起运</span><span>点地支看该运干支</span>') + '</div>';
+      ? '<span>「起」起运</span><span>「今」现在</span><span>点地支看该运流年</span>'
+      : '<span>「起」起运</span><span>点地支看该运干支</span>') + '</div>';
 }
 
 function lnHtml(r){
