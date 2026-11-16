@@ -98,8 +98,8 @@ h1 span{color:var(--huo)}
 .ana .hl{font-family:var(--serif);font-size:15px;font-weight:500;line-height:1.6;color:var(--ink);margin:8px 0 10px;padding-left:9px;border-left:2px solid var(--ink);letter-spacing:1px}
 .ana .tx{font-size:11px;line-height:1.95;color:#5a544e;text-align:justify}
 .ana .tx.tl{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);color:var(--ink)}
-.ana .qt{margin-top:9px;padding-top:8px;border-top:1px solid var(--line);font-size:10px;line-height:1.85;color:#8a8177;text-align:justify}
-.ana .qt i{display:block;font-style:normal;margin-top:3px;letter-spacing:1px;color:#b3a99e}
+.ana .qt{margin-top:9px;padding-top:8px;border-top:1px solid var(--line);font-size:10px;line-height:1.8;color:#8a8177}
+.ana .qt span{margin-left:6px;letter-spacing:1px;color:#b6aca1}
 @media (min-width:680px){.ana{grid-template-columns:1fr 1fr;gap:11px}}
 @media (max-width:400px){.ana .hl{font-size:13.5px}.ana .tx{font-size:10.5px}}
 </style>
@@ -934,11 +934,15 @@ function analyzeAll(r){
   else { lvl = '身极弱（近从格）'; }
 
   var monthG = GRP_NAME[monthCang[0].god];
-  ev.push('令 ' + ZHI[monthZhi] + '月 ' + monthCang[0].gan + monthCang[0].god +
-          (monthG === '比劫' || monthG === '印星' ? '，得令' : '，失令'));
-  ev.push('地 ' + (roots.length ? '通根' + roots.join('、') : '无本气之根'));
-  ev.push('势 ' + ganEv.join('、'));
-  ev.push('计 ' + score + ' 分');
+  var rootsShort = [];
+  roots.forEach(function(x){
+    var z = x.replace(/^.*支/, '').replace(/（.*?）/, '');
+    if (rootsShort.indexOf(z) < 0) rootsShort.push(z);
+  });
+  ev.push('令 ' + ZHI[monthZhi] + '月' + monthCang[0].gan + monthCang[0].god +
+          (monthG === '比劫' || monthG === '印星' ? '得令' : '失令') +
+          (rootsShort.length ? '，通根' + rootsShort.join('、') : '，无根'));
+  ev.push('势 ' + ganEv.join('、') + '，计 ' + score + ' 分');
 
   var shenType = (score >= 8) ? '旺' : (score <= -8 ? '弱' : '平');
   var xiYong;
@@ -1037,17 +1041,17 @@ function analyzeAll(r){
     });
     return arr;
   };
-  var thLines = [], thHl;
+  var thLines = [], thHl, thTail = '';
   if (th){
     var mPos = posOf(th.m), sPos = th.s ? posOf(th.s) : [];
     thHl = '用神 ' + th.m + (th.s ? '、' + th.s : '') + '（' + dGan + '日' + ZHI[monthZhi] + '月）';
     var touM = mPos.filter(function(x){ return x.indexOf('干') >= 0; });
     var touS = sPos.filter(function(x){ return x.indexOf('干') >= 0; });
     thLines.push('主 ' + th.m + '：' + (touM.length ? touM.join('、') + '，透干得用'
-      : (mPos.length ? mPos.join('、') + '，待运' : '不见，待运补')));
+      : (mPos.length ? mPos.join('、') + '，待运' : '不见，待运')));
     if (th.s) thLines.push('次 ' + th.s + '：' + (touS.length ? touS.join('、') + '，得力'
       : (sPos.length ? sPos.join('、') + '，为佐' : '不见，力薄')));
-    thLines.push('理 ' + whyText(th.m, monthZhi));
+    thTail = '理 ' + whyText(th.m, monthZhi);
   } else {
     thHl = '调候：本命取《穷通宝鉴》通例';
     thLines.push('未见对应条目');
@@ -1057,7 +1061,8 @@ function analyzeAll(r){
     tag: '调候分析',
     hl: thHl,
     lines: thLines,
-    quote: th ? '「' + (th.q.length > 26 ? th.q.slice(0, 26) + '…' : th.q) + '」' : '',
+    tail: thTail,
+    quote: th ? '「' + (th.q.length > 18 ? th.q.slice(0, 18) + '…' : th.q) + '」' : '',
     src: th ? th.src : '穷通宝鉴'
   };
 
@@ -1126,7 +1131,7 @@ function analyzeAll(r){
   var xingxiang = {
     tag: '八字形象分析',
     hl: xiang,
-    lines: [xiangDesc, shareStr()],
+    lines: [shareStr()],
     tail: xiangTail,
     quote: xiangQuote,
     src: xiangSrc
@@ -1140,7 +1145,7 @@ function analysisHtml(r){
     var lines = c.lines.map(function(l){ return '<div class="tx">' + l + '</div>'; }).join('');
     var tail = c.tail ? '<div class="tx tl">' + c.tail + '</div>' : '';
     var quote = c.quote ? '<div class="qt">' + c.quote +
-      (c.src ? '<i>' + c.src + '</i>' : '') + '</div>' : '';
+      (c.src ? '<span>' + c.src + '</span>' : '') + '</div>' : '';
     return '<div class="card"><div class="lb">' + c.tag + '</div>' +
       '<div class="hl">' + c.hl + '</div>' + lines + tail + quote + '</div>';
   }).join('');
