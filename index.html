@@ -869,12 +869,12 @@ function wxOfGroup(w, dw){
 
 function whyText(m, mz){
   var wx = GAN_WX[GAN.indexOf(m)];
-  var summer = (mz >= 5 && mz <= 7), winter = (mz === 11 || mz <= 1);
-  if (wx === 4) return summer ? '夏火当权，水弱火炎，须壬癸既济，成天地润和' : '以水润燥制火，取其既济之意';
-  if (wx === 1) return winter ? '天寒地冻，非火不暖，取丙丁解冻回阳' : '须火暖局、炼金成器，取其阳明之象';
-  if (wx === 0) return '须木疏土引丁，为火之薪、为土之官';
-  if (wx === 3) return '须金劈甲发水源，或炼而成器，取其刚锐之用';
-  return '须土制水为堤，或培根护局，取其厚载之功';
+  var cold = (mz === 11 || mz <= 2);
+  if (wx === 4) return '取水制火，既济为功';
+  if (wx === 1) return cold ? '天寒，取火解冻回阳' : '取火暖局、炼金成器';
+  if (wx === 0) return '须木引丁，为火之薪';
+  if (wx === 3) return '须金劈甲发水源';
+  return '须土制水为堤';
 }
 
 function analyzeAll(r){
@@ -912,7 +912,7 @@ function analyzeAll(r){
     if (i === 2) return;
     var g = GRP_NAME[p.god];
     score += {'比劫':9,'印星':8,'食伤':-6,'财星':-8,'官杀':-10}[g];
-    ganEv.push(p.label + '干' + p.gan + '为' + p.god);
+    ganEv.push(p.label + p.gan + p.god);
   });
 
   /* 其他地支本气 */
@@ -932,32 +932,32 @@ function analyzeAll(r){
   else { lvl = '身极弱（近从格）'; }
 
   var monthG = GRP_NAME[monthCang[0].god];
-  ev.push('得令：月令' + ZHI[monthZhi] + '，本气' + monthCang[0].gan + '为' + monthCang[0].god +
-          (monthG === '比劫' || monthG === '印星' ? '，日主当令有气' : '，日主失令受制'));
-  ev.push('得地：' + (roots.length ? '通根于' + roots.join('、') : '四支中无同类本气之根，为无根之局'));
-  ev.push('得势：天干' + ganEv.join('，'));
-  ev.push('综合三项计分：旺衰分值 ' + score + '（-100 至 +100，0 为中和）');
+  ev.push('令 ' + ZHI[monthZhi] + '月 ' + monthCang[0].gan + monthCang[0].god +
+          (monthG === '比劫' || monthG === '印星' ? '，得令' : '，失令'));
+  ev.push('地 ' + (roots.length ? '通根' + roots.join('、') : '无本气之根'));
+  ev.push('势 ' + ganEv.join('、'));
+  ev.push('计 ' + score + ' 分');
 
   var shenType = (score >= 8) ? '旺' : (score <= -8 ? '弱' : '平');
   var xiYong;
   if (shenType === '旺'){
     var wCai = WX_NAME[KE[dw]], wGuan = WX_NAME[KE.indexOf(dw)], wShi = WX_NAME[SHENG[dw]];
-    xiYong = '宜泄不宜助：喜' + wCai + '（财）' + wGuan + '（官杀）' + wShi + '（食伤），忌' +
-             WX_NAME[dw] + '（比劫）' + WX_NAME[SHENG.indexOf(dw)] + '（印）再添';
+    xiYong = '喜 ' + wCai + '（财）' + wGuan + '（官杀）' + wShi + '（食伤）｜忌 ' +
+             WX_NAME[dw] + '（比劫）' + WX_NAME[SHENG.indexOf(dw)] + '（印）';
   } else if (shenType === '弱'){
     var wYin = WX_NAME[SHENG.indexOf(dw)];
-    xiYong = '宜助不宜泄：喜' + wYin + '（印星）' + WX_NAME[dw] + '（比劫）生扶，忌' +
-             WX_NAME[KE[dw]] + '（财）' + WX_NAME[KE.indexOf(dw)] + '（官杀）' + WX_NAME[SHENG[dw]] + '（食伤）耗克';
+    xiYong = '喜 ' + wYin + '（印）' + WX_NAME[dw] + '（比劫）｜忌 ' +
+             WX_NAME[KE[dw]] + '（财）' + WX_NAME[KE.indexOf(dw)] + '（官杀）' + WX_NAME[SHENG[dw]] + '（食伤）';
   } else {
-    xiYong = '气势均平，取月令透出之神为用，忌偏枯一边倒';
+    xiYong = '气势均平，取月令透出之神为用';
   }
 
   var strong = {
     tag: '强弱分析',
-    hl: lvl + '｜' + xiYong.split('：')[0],
+    hl: lvl + (shenType === '旺' ? '｜宜泄不宜助' : (shenType === '弱' ? '｜宜助不宜泄' : '｜气势均平')),
     lines: ev,
     tail: xiYong,
-    quote: '「有病方为贵，无伤不是奇；格中如去病，财禄两相随」',
+    quote: '「有病方为贵，无伤不是奇」',
     src: '神峰通考·病药说'
   };
 
@@ -967,18 +967,20 @@ function analyzeAll(r){
   var benGan = monthCang[0].gan, benGod = monthCang[0].god, benG = GRP_NAME[benGod];
   var touList = [];
   monthCang.forEach(function(c){
+    var where = [];
     r.pillars.forEach(function(p, i){
       if (i === 2) return;
-      if (p.gan === c.gan) touList.push(c.gan + '透' + p.label + '干');
+      if (p.gan === c.gan) where.push(p.label);
     });
+    if (where.length) touList.push(c.gan + '透' + where.join('、') + '干');
   });
 
   if (benG === '比劫'){
     if (stage === '临官'){ geName = '建禄格'; }
     else if (stage === '帝旺'){ geName = (dGanIdx % 2 === 0 ? '阳刃格' : '月刃格'); }
     else { geName = '月劫格'; }
-    geBasis = '月令' + ZHI[monthZhi] + '为日主' + stage + '之地，比劫当令，本身不可为用，须于四柱别取财官';
-    yongFang = '建禄月劫「非用而即用神」，喜透官星制身、财星为用；阳刃尤喜官煞制刃，忌刃旺无制';
+    geBasis = ZHI[monthZhi] + '月日主' + stage + '，比劫当令，须别取财官';
+    yongFang = '顺用：喜官星制身、财星为用，忌无制';
   } else {
     var map = {'正官':'正官格','七杀':'七杀格','正财':'正财格','偏财':'偏财格','正印':'正印格','偏印':'偏印格','食神':'食神格','伤官':'伤官格'};
     /* 月令本气不透，则取透出之中气／余气为格 */
@@ -991,28 +993,27 @@ function analyzeAll(r){
     }
     geName = map[useC.god] || (useC.god + '格');
     benGod = useC.god; benG = GRP_NAME[useC.god];
-    geBasis = '月令' + ZHI[monthZhi] + '藏' + monthCang.map(function(c){ return c.gan + '(' + c.god + ')'; }).join('、') +
-              '，取' + useC.gan + '之' + useC.god + '为格' +
-              (touList.length ? '；' + touList.join('、') : '；月令之神未透，以本气论格，待运引发');
+    geBasis = ZHI[monthZhi] + '藏' + monthCang.map(function(c){ return c.gan; }).join('、') +
+              '，' + (touList.length ? touList.join('；') : '本气未透') + '，取' + useC.god + '格';
     var yongMap = {
-      '正官':'正官为四吉之首，宜顺用：喜财星生官、印星护官，忌伤官见官',
-      '七杀':'七杀为凶神，宜逆用：喜食神制杀、印星化杀，忌财星党杀',
-      '正财':'正财顺用：喜食伤生财、身旺任财，忌比劫分夺',
-      '偏财':'偏财顺用：喜食伤生财、身旺任财，忌比劫分夺',
-      '正印':'正印顺用：喜官煞生印、比劫护印，忌财星坏印',
-      '偏印':'枭印逆用：喜财星制枭，忌枭旺夺食',
-      '食神':'食神顺用：喜身旺食秀、食神生财，忌枭神夺食',
-      '伤官':'伤官逆用：喜佩印制伤、生财化伤，忌见官星'
+      '正官':'顺用：喜财生官、印护官，忌伤官见官',
+      '七杀':'逆用：喜食制杀、印化杀，忌财党杀',
+      '正财':'顺用：喜食伤生财，忌比劫夺财',
+      '偏财':'顺用：喜食伤生财，忌比劫夺财',
+      '正印':'顺用：喜官煞生印，忌财坏印',
+      '偏印':'逆用：喜财制枭，忌枭夺食',
+      '食神':'顺用：喜食神生财，忌枭夺食',
+      '伤官':'逆用：喜印制伤、生财，忌见官'
     };
     yongFang = yongMap[benGod] || '';
   }
 
   var geju = {
     tag: '格局分析',
-    hl: geName + ' · 月令' + ZHI[monthZhi] + (benG === '比劫' ? '（另取财官）' : (useC === monthCang[0] ? '（' + benGod + '当令）' : '（' + useC.gan + useC.god + '透干取格）')),
+    hl: geName + ' · ' + (benG === '比劫' ? '别取财官' : (useC === monthCang[0] ? ZHI[monthZhi] + '月当令' : useC.gan + '透干')),
     lines: [geBasis],
     tail: yongFang,
-    quote: '「八字用神，专求月令，以日干配月令地支，而生克不同，格局分焉。财官印食，此用神之善而顺用之者也；煞伤劫刃，用神之不善而逆用之者也」',
+    quote: '「财官印食，此用神之善而顺用之者也」',
     src: '子平真诠·论用神'
   };
 
@@ -1020,24 +1021,31 @@ function analyzeAll(r){
   var zhKey = dGan + ZHI[monthZhi];
   var th = TIHOU[zhKey] || null;
   var posOf = function(g){
+    var ganLabels = [], zhiMap = {};
+    r.pillars.forEach(function(p){
+      if (p.gan === g) ganLabels.push(p.label);
+      p.cang.forEach(function(c){
+        if (c.gan === g){ (zhiMap[p.zhi] = zhiMap[p.zhi] || []).push(p.label); }
+      });
+    });
     var arr = [];
-    r.pillars.forEach(function(p, i){
-      if (p.gan === g) arr.push(p.label + '干' + g);
-      if (p.cang.some(function(c){ return c.gan === g; })) arr.push(p.label + '支' + p.zhi + '藏' + g);
+    if (ganLabels.length) arr.push(ganLabels.join('、') + '干' + g);
+    Object.keys(zhiMap).forEach(function(z){
+      arr.push(zhiMap[z].join('、') + '支' + z + '藏' + g);
     });
     return arr;
   };
   var thLines = [], thHl;
   if (th){
     var mPos = posOf(th.m), sPos = th.s ? posOf(th.s) : [];
-    thHl = '调候用神：' + th.m + (th.s ? '、' + th.s : '') + '（' + dGan + '日' + ZHI[monthZhi] + '月）';
+    thHl = '用神 ' + th.m + (th.s ? '、' + th.s : '') + '（' + dGan + '日' + ZHI[monthZhi] + '月）';
     var touM = mPos.filter(function(x){ return x.indexOf('干') >= 0; });
     var touS = sPos.filter(function(x){ return x.indexOf('干') >= 0; });
-    thLines.push('主用 ' + th.m + '：' + (touM.length ? touM.join('、') + '，透干有力，调候得用'
-      : (mPos.length ? mPos.join('、') + '，有根藏支，待运引发' : '命局不见，调候有缺，须待运补')));
-    if (th.s) thLines.push('次用 ' + th.s + '：' + (touS.length ? touS.join('、') + '，为辅佐得力'
-      : (sPos.length ? sPos.join('、') + '，藏支为辅' : '命局不见，次要用神无力')));
-    thLines.push('取用之理：' + whyText(th.m, monthZhi));
+    thLines.push('主 ' + th.m + '：' + (touM.length ? touM.join('、') + '，透干得用'
+      : (mPos.length ? mPos.join('、') + '，待运' : '不见，待运补')));
+    if (th.s) thLines.push('次 ' + th.s + '：' + (touS.length ? touS.join('、') + '，得力'
+      : (sPos.length ? sPos.join('、') + '，为佐' : '不见，力薄')));
+    thLines.push('理 ' + whyText(th.m, monthZhi));
   } else {
     thHl = '调候：本命取《穷通宝鉴》通例';
     thLines.push('未见对应条目');
@@ -1047,7 +1055,7 @@ function analyzeAll(r){
     tag: '调候分析',
     hl: thHl,
     lines: thLines,
-    quote: th ? '「' + th.q + '」' : '',
+    quote: th ? '「' + (th.q.length > 26 ? th.q.slice(0, 26) + '…' : th.q) + '」' : '',
     src: th ? th.src : '穷通宝鉴'
   };
 
@@ -1059,67 +1067,64 @@ function analyzeAll(r){
   var topWx = WX_NAME[top1], top2Wx = WX_NAME[top2];
 
   function shareStr(){
-    return pct.map(function(v, i){ return WX_NAME[i] + ' ' + (v * 100).toFixed(0) + '%'; }).join('　');
+    return sorted.map(function(i){ return WX_NAME[i] + ' ' + (pct[i] * 100).toFixed(0) + '%'; }).join('  ');
   }
 
   var xiang, xiangDesc, xiangQuote, xiangSrc, xiangTail;
   var MING = {'木':'曲直格','火':'炎上格','土':'稼穑格','金':'从革格','水':'润下格'};
   if (pct[top1] >= 0.5 && top1 === dw){
     xiang = '一气专旺 · ' + MING[WX_NAME[top1]];
-    xiangDesc = '全局' + WX_NAME[top1] + '气独盛（' + (pct[top1] * 100).toFixed(0) + '%），日主' +
-      (top1 === dw ? '同气当权，成' + MING[WX_NAME[top1]] + '之象' : '') + '，宜顺其气势，不宜逆克';
+    xiangDesc = WX_NAME[top1] + '气独盛（' + (pct[top1] * 100).toFixed(0) + '%）';
     xiangQuote = '「巳酉丑申金气全，从革局多名挂剑」';
     xiangSrc = '三命通会·论五行';
-    xiangTail = '专旺之局最忌克神破格，行运喜同类与泄秀，忌官杀直克、财星激旺';
+    xiangTail = '顺其气势，喜同类泄秀，忌官杀直克';
   } else if (pct[top1] >= 0.18 && pct[top2] >= 0.18 && pct[top1] + pct[top2] >= 0.50){
     var pair = [top1, top2].sort().join('');
     var pairMap = {
-      '01': ['木火通明', '木气生火，秀气发越于上，文明之象', '「会印归禄，水精火神之妙，木火通明之象」', '三命通会·论命'],
-      '34': ['金水相涵', '金得水而清，水得金而源远，清贵之象', '「金水相涵，笔下千篇锦绣」', '三命通会·论命'],
-      '04': ['水木清奇', '水润木荣，流通有情，聪秀之象', '「木火通明，水木清奇」', '三命通会·论命'],
-      '12': ['火土功成', '火暖土厚，万物长养，稼穑之象', '「火土功成局最奇」', '渊海子平·己土诗'],
-      '23': ['土金毓秀', '土厚藏金，顽金待炼，器用之象', '「顽金宜丁，旺土须甲」', '穷通宝鉴·论金'],
-      '02': ['木土相持', '木疏土而土培木，相制相成之象', '「无甲疏劈，戊土不灵」', '穷通宝鉴·论土'],
-      '03': ['金木相战', '金木对垒，克战之象，须水通关为贵', '「木逢金旺巳伤，再遇金乡，岂不损寿」', '穷通宝鉴·论木'],
-      '13': ['火金相成', '火炼金而成器，锻铸之象', '「顽金无火不能成器」', '三命通会·论金'],
-      '14': ['水火既济', '水火相制而成用，寒暖相济之象', '「名曰天和地润，既济功成」', '穷通宝鉴·论火'],
-      '24': ['土水相制', '土堤水而水润土，提防之象', '「须戊作堤，以保园圃」', '穷通宝鉴·论土']
+      '01': ['木火通明', '木生火，秀气发越', '「会印归禄，水精火神之妙」', '三命通会·论命'],
+      '34': ['金水相涵', '金水相生，清贵之象', '「金水相涵，笔下千篇锦绣」', '三命通会·论命'],
+      '04': ['水木清奇', '水润木荣，聪秀之象', '「木火通明，水木清奇」', '三命通会·论命'],
+      '12': ['火土功成', '火暖土厚，长养之象', '「火土功成局最奇」', '渊海子平·己土诗'],
+      '23': ['土金毓秀', '土厚藏金，器用之象', '「顽金宜丁，旺土须甲」', '穷通宝鉴·论金'],
+      '02': ['木土相持', '木疏土，相制成象', '「无甲疏劈，戊土不灵」', '穷通宝鉴·论土'],
+      '03': ['金木相战', '金木克战，须水通关', '「木逢金旺巳伤」', '穷通宝鉴·论木'],
+      '13': ['火金相成', '火炼金，锻铸之象', '「顽金无火不能成器」', '三命通会·论金'],
+      '14': ['水火既济', '水火相制，寒暖相济', '「名曰天和地润，既济功成」', '穷通宝鉴·论火'],
+      '24': ['土水相制', '土堤水，提防之象', '「须戊作堤，以保园圃」', '穷通宝鉴·论土']
     };
     var e = pairMap[pair];
     if (e){
       xiang = e[0]; xiangDesc = e[1]; xiangQuote = e[2]; xiangSrc = e[3];
     } else {
-      xiang = topWx + top2Wx + '并见'; xiangDesc = '两气成象，' + topWx + '与' + top2Wx + '并旺';
+      xiang = topWx + top2Wx + '并见'; xiangDesc = '两气并旺';
       xiangQuote = ''; xiangSrc = '';
     }
     var rel;
     if (SHENG[top1] === top2){
-      xiangTail = '两气成象，重在顺流：' + topWx + '生' + top2Wx + '，气脉相续，行运喜' + top2Wx + '与' + WX_NAME[SHENG.indexOf(top1)] + '，忌克破源头';
+      xiangTail = '顺流：' + topWx + '生' + top2Wx + '，忌克破源头';
     } else if (SHENG[top2] === top1){
-      xiangTail = '两气成象，重在顺流：' + top2Wx + '生' + topWx + '，气脉相续，行运喜' + topWx + '与' + WX_NAME[SHENG.indexOf(top2)] + '，忌克破源头';
+      xiangTail = '顺流：' + top2Wx + '生' + topWx + '，忌克破源头';
     } else {
       var pass = -1;
       for (var w = 0; w < 5; w++){
         if (SHENG[top1] === w && SHENG[w] === top2) pass = w;
         if (SHENG[top2] === w && SHENG[w] === top1) pass = w;
       }
-      xiangTail = '两气对立：' + topWx + '与' + top2Wx + '相制，须以' + (pass >= 0 ? WX_NAME[pass] : '通关之神') +
-        '居间调和，化克为生，方为成象';
+      xiangTail = topWx + '与' + top2Wx + '相制，须' + (pass >= 0 ? WX_NAME[pass] : '通关之神') + '通关';
     }
   } else {
     var weak = [0,1,2,3,4].slice().sort(function(a, b){ return pct[a] - pct[b]; })[0];
     xiang = WX_NAME[top1] + '旺' + (pct[weak] < 0.06 ? '而' + WX_NAME[weak] + '缺' : '，五行流通');
-    xiangDesc = '五行以' + topWx + '为最旺（' + (pct[top1] * 100).toFixed(0) + '%），' +
-      WX_NAME[weak] + '最弱（' + (pct[weak] * 100).toFixed(0) + '%），气象偏于' + topWx +
-      '，日主' + dGan + '（' + WX_NAME[dw] + '）居其中';
+    xiangDesc = '最旺' + topWx + ' ' + (pct[top1] * 100).toFixed(0) + '%，最弱' + WX_NAME[weak] + ' ' +
+      (pct[weak] * 100).toFixed(0) + '%';
     xiangQuote = ''; xiangSrc = '三命通会·论五行';
-    xiangTail = '气象偏枯者，取所缺之字为药；五行流通者，顺月令之势取用';
+    xiangTail = '气偏则取所缺为药，流通则顺月令取用';
   }
 
   var xingxiang = {
     tag: '八字形象分析',
     hl: xiang,
-    lines: [xiangDesc + '（' + shareStr() + '）'],
+    lines: [xiangDesc, shareStr()],
     tail: xiangTail,
     quote: xiangQuote,
     src: xiangSrc
