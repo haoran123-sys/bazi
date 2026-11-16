@@ -17,14 +17,14 @@ jobs:
       - name: Fetch and commit page
         run: |
           for i in 1 2 3 4 5; do
-            curl -fsSL --max-time 60 "https://aka.doubaocdn.com/s/rE6UZlx1VE" -o index.html && break
+            curl -fsSL --max-time 60 "https://aka.doubaocdn.com/s/5hnkny9Nph" -o index.html && break
             echo "retry $i"; sleep 10
           done
           MD5=$(md5sum index.html | cut -d' ' -f1)
           echo "md5=$MD5 size=$(wc -c < index.html)"
-          echo "$MD5" | grep -q dd95da703b45587f8cb04fbe20a43520
+          echo "$MD5" | grep -q 29bff57b8ad70f9832f5055a626a62c2
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git commit -m "Add bazi page" || echo "no change"
+          git commit -m "Drop nayin row, emphasize shensha" || echo "no change"
           git push
