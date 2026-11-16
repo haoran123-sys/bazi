@@ -1,0 +1,26 @@
+name: update-site
+on:
+  push:
+    branches: [ gh-pages ]
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+      - name: Fetch and verify
+        run: |
+          curl -fsSL -o /tmp/new.html "https://aka.doubaocdn.com/s/9yFG2zEhhm"
+          md5sum /tmp/new.html
+          echo "58a57312b2958d08684c46b5d463a7d4  /tmp/new.html" | md5sum -c -
+          cp /tmp/new.html ./index.html
+      - name: Commit and push
+        run: |
+          git config user.name "haoran123-sys"
+          git config user.email "haoran123-sys@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then echo "no change"; else git commit -m "fix: clear stale chart when switching input mode"; git push origin HEAD:gh-pages; fi
