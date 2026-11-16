@@ -59,6 +59,10 @@ h1 span{color:var(--huo)}
 .pan .ss{margin-top:9px;padding-top:7px;border-top:1px dashed var(--line);font-size:10.5px;line-height:1.8}
 .pan .ss span{display:inline-block;border:1px solid var(--ink);border-radius:1px;padding:1px 4px;margin:2px 2px 0;color:var(--ink);letter-spacing:.5px}
 .pan .kong{display:inline-block;border:1px solid var(--ink);border-radius:1px;padding:0 3px;font-size:9.5px;line-height:1.5;margin-top:6px}
+.rel{margin:12px 0 10px;border-top:1px dashed var(--line);padding-top:9px;font-family:var(--serif)}
+.rel .rl{display:grid;grid-template-columns:36px minmax(0,1fr);gap:6px;align-items:baseline;line-height:2}
+.rel .rk{font-family:system-ui,-apple-system,sans-serif;font-size:10px;color:#B5B5B5;letter-spacing:2px}
+.rel .rv{font-size:12.5px;color:var(--ink);letter-spacing:.5px;word-break:break-word}
 .mu{color:var(--mu)}.huo{color:var(--huo)}.tu{color:var(--tu)}.jin{color:var(--jin)}.shui{color:var(--shui)}
 .wx{margin-top:16px;border:1px solid var(--line);padding:10px 12px 12px}
 .wx .row{display:grid;grid-template-columns:34px 1fr 78px;align-items:center;gap:8px;margin-top:6px}
@@ -70,6 +74,7 @@ h1 span{color:var(--huo)}
 .sx{display:grid;grid-template-columns:minmax(0,1fr)}
 .wheel{display:flex;justify-content:center;padding:6px 0 2px}
 .wheel svg{width:344px;max-width:100%;height:auto}
+.wheel .wse{font-family:var(--serif);font-size:10px;letter-spacing:2px;fill:#C6C6C6}
 .wheel .ring{fill:none;stroke:var(--line);stroke-width:1}
 .wheel text{text-anchor:middle;font-family:var(--serif);fill:var(--ink)}
 .wheel .wz{font-size:17px;font-weight:500}
@@ -1197,7 +1202,7 @@ function run(){
       return gzIndexOf(+$(ids[0]).value, +$(ids[1]).value);
     });
     state.res = baziFromGZ(idxs[0], idxs[1], idxs[2], idxs[3], !!state.sex);
-    state.dyIdx = 0; render(); return;
+    state.dyIdx = -1; render(); return;
   }
   var y, m, d;
   if (state.mode === 'l'){
@@ -1210,22 +1215,25 @@ function run(){
   var hh = +$('bh').value, mi = +$('bmi').value;
   if (!(y >= 1900 && y <= 2100)){ alert('年份限 1900–2100'); return; }
   state.res = baziCompute(y, m, d, hh, mi, !!state.sex, !!state.zi);
-  state.dyIdx = nowIdx(state.res);
+  var ni = nowIdx(state.res);
+  state.dyIdx = (ni >= 0 ? ni : 0);
   render();
 }
 
 function render(){
   var r = state.res;
   var gzMode = (r.mode === 'gz');
-  OUT.innerHTML = metaHtml(r) + panHtml(r) +
+  OUT.innerHTML = metaHtml(r) + panHtml(r) + relHtml(r) +
     (gzMode ? (dyHtml(r) + analysisHtml(r) + gzNote()) : (dyHtml(r) + lnHtml(r) + analysisHtml(r)));
   bindDy();
 }
 
 function nowIdx(r){
-  var cy = new Date().getFullYear(), hit = 0;
-  if (!r.daYun) return 0;
-  r.daYun.forEach(function(d, i){ if (cy >= d.startYear && cy <= d.endYear) hit = i; });
+  var cy = new Date().getFullYear(), hit = -1;
+  if (!r.daYun) return -1;
+  r.daYun.forEach(function(d, i){
+    if (d.startYear !== null && cy >= d.startYear && cy <= d.endYear) hit = i;
+  });
   return hit;
 }
 
@@ -1273,6 +1281,67 @@ function panHtml(r){
   return '<div class="pan">' + cols + '</div>';
 }
 
+
+/* ===================== 干支关系 ===================== */
+var REL_ZHI = {
+  he:    [[0,1],[2,11],[3,10],[4,9],[5,8],[6,7]],   // 六合
+  chong: [[0,6],[1,7],[2,8],[3,9],[4,10],[5,11]],   // 六冲
+  xing:  [[0,3],[2,5],[2,8],[5,8],[1,10],[1,7],[7,10]], // 刑（子卯、寅巳申、丑戌未）
+  po:    [[0,9],[3,6],[2,11],[1,4],[5,8],[7,10]],   // 六破
+  hai:   [[0,7],[1,6],[2,5],[3,4],[8,11],[9,10]]    // 六害
+};
+var REL_GAN_HE = [[0,5],[1,6],[2,7],[3,8],[4,9]];   // 五合：甲己、乙庚、丙辛、丁壬、戊癸
+var REL_GAN_CHONG = [[0,6],[1,7],[2,8],[3,9]];      // 相冲：甲庚、乙辛、丙壬、丁癸
+var WX_KE = [2,3,4,0,1];                            // 木克土、火克金、土克水、金克木、水克火
+
+function hasPair(list, a, b){
+  for (var i = 0; i < list.length; i++){
+    if ((list[i][0] === a && list[i][1] === b) || (list[i][0] === b && list[i][1] === a)) return true;
+  }
+  return false;
+}
+function ganRels(gi, gj){
+  var t = [];
+  if (hasPair(REL_GAN_HE, gi, gj)) t.push('合');
+  if (hasPair(REL_GAN_CHONG, gi, gj)) t.push('冲');
+  if (!t.length){
+    if (WX_KE[GAN_WX[gi]] === GAN_WX[gj] || WX_KE[GAN_WX[gj]] === GAN_WX[gi]) t.push('克');
+  }
+  return t;
+}
+function zhiRels(zi, zj){
+  var t = [];
+  if (hasPair(REL_ZHI.he, zi, zj)) t.push('合');
+  if (hasPair(REL_ZHI.chong, zi, zj)) t.push('冲');
+  if (hasPair(REL_ZHI.xing, zi, zj)) t.push('刑');
+  if (hasPair(REL_ZHI.po, zi, zj)) t.push('破');
+  if (hasPair(REL_ZHI.hai, zi, zj)) t.push('害');
+  if (zi === zj && (zi === 4 || zi === 6 || zi === 9 || zi === 11)) t.push('自刑');
+  return t;
+}
+function relHtml(r){
+  var PL = ['年','月','日','时'], p = r.pillars;
+  var ganItems = [], zhiItems = [];
+  for (var i = 0; i < 4; i++){
+    for (var j = i + 1; j < 4; j++){
+      var gi = p[i].idx % 10, gj = p[j].idx % 10;
+      var gr = ganRels(gi, gj);
+      if (gr.length) ganItems.push(PL[i] + '·' + PL[j] + ' ' + GAN[gi] + GAN[gj] + gr.join(''));
+    }
+  }
+  for (var k = 0; k < 3; k++){
+    var zi = p[k].idx % 12, zj = p[k + 1].idx % 12;
+    var zr = zhiRels(zi, zj);
+    if (zr.length) zhiItems.push(PL[k] + '·' + PL[k + 1] + ' ' + ZHI[zi] + ZHI[zj] + zr.join(''));
+  }
+  return '<div class="rel">' +
+    '<div class="rl"><span class="rk">天干</span><span class="rv">' +
+      (ganItems.length ? ganItems.join('　') : '无合冲克') + '</span></div>' +
+    '<div class="rl"><span class="rk">地支</span><span class="rv">' +
+      (zhiItems.length ? zhiItems.join('　') : '相邻无刑冲破害') + '</span></div>' +
+    '</div>';
+}
+
 function wxHtml(r){
   var max = Math.max.apply(null, r.power);
   var rows = [0,1,2,3,4].map(function(w){
@@ -1305,7 +1374,7 @@ function dyHtml(r){
     var cls = 'wn' + (i2 === state.dyIdx ? ' sel' : '');
     var lx = (CX + (R + 31) * Math.cos(ang)).toFixed(1);
     var ly = (CY + (R + 31) * Math.sin(ang) + 3).toFixed(1);
-    var mark = (i2 === 0 ? '起' : '') + ((i2 === now && !!r.qiyun) ? '今' : '');
+    var mark = ((i2 === 0 && !!r.qiyun) ? '起' : '') + ((i2 === now && !!r.qiyun) ? '今' : '');
     var lab = mark ? '<text class="wlab" x="' + lx + '" y="' + ly + '">' + mark + '</text>' : '';
     var first = '';
     nodes += '<g class="' + cls + '" data-i="' + i2 + '">' + first +
@@ -1315,19 +1384,39 @@ function dyHtml(r){
       '</g>' + lab;
   }
 
-  var cur = r.daYun[state.dyIdx];
-  var g2 = GAN[cur.idx % 10], z2 = ZHI[cur.idx % 12];
-  var cYr = (cur.startYear !== null)
-    ? '<text class="cy" x="' + CX + '" y="182">' + cur.startYear + '–' + cur.endYear + '</text>' +
-      '<text class="ca" x="' + CX + '" y="201">' + cur.age + ' 岁起' +
-        (state.dyIdx === now ? ' · 现在' : '') + '</text>'
-    : '<text class="cy" x="' + CX + '" y="182">' + r.direction + '</text>' +
-      '<text class="ca" x="' + CX + '" y="201">起运待定</text>';
-  var center =
-    '<text class="cg" x="' + CX + '" y="158">' +
-      '<tspan class="' + wxCls(GAN_WX[cur.idx % 10]) + '">' + g2 + '</tspan>' +
-      '<tspan class="' + wxCls(ZHI_WX[cur.idx % 12]) + '">' + z2 + '</tspan></text>' +
-    cYr;
+  /* 四正方位以季节标注：卯春、午夏、酉秋、子冬 */
+  var SEASON = {3: '春', 6: '夏', 9: '秋', 0: '冬'};
+  var season = '';
+  Object.keys(SEASON).forEach(function(k){
+    var sa = Math.PI / 2 + (+k) * Math.PI / 6, sr = R - 42;
+    season += '<text class="wse" x="' + (CX + sr * Math.cos(sa)).toFixed(1) + '" y="' +
+      (CY + sr * Math.sin(sa) + 4).toFixed(1) + '">' + SEASON[k] + '</text>';
+  });
+
+  var cur = (state.dyIdx >= 0) ? r.daYun[state.dyIdx] : null;
+  var outside = '';
+  if (r.qiyun && now < 0 && r.daYun.length){
+    outside = (new Date().getFullYear() < r.daYun[0].startYear) ? '未起运' : '已出运';
+  }
+  var center;
+  if (!cur){
+    center = '<text class="cy" x="' + CX + '" y="168">' + r.direction + '</text>' +
+      '<text class="ca" x="' + CX + '" y="188">当前大运待定</text>' +
+      '<text class="ca" x="' + CX + '" y="206">点地支查各运</text>';
+  } else {
+    var g2 = GAN[cur.idx % 10], z2 = ZHI[cur.idx % 12];
+    var cYr = (cur.startYear !== null)
+      ? '<text class="cy" x="' + CX + '" y="182">' + cur.startYear + '–' + cur.endYear + '</text>' +
+        '<text class="ca" x="' + CX + '" y="201">' + cur.age + ' 岁起' +
+          (state.dyIdx === now ? ' · 现在' : (outside ? ' · ' + outside : '')) + '</text>'
+      : '<text class="cy" x="' + CX + '" y="182">' + r.direction + '</text>' +
+        '<text class="ca" x="' + CX + '" y="201">起运待定</text>';
+    center =
+      '<text class="cg" x="' + CX + '" y="158">' +
+        '<tspan class="' + wxCls(GAN_WX[cur.idx % 10]) + '">' + g2 + '</tspan>' +
+        '<tspan class="' + wxCls(ZHI_WX[cur.idx % 12]) + '">' + z2 + '</tspan></text>' +
+      cYr;
+  }
 
   var qy = r.qiyun
     ? '<div class="qy">起运 <b>' + r.qiyun.y + ' 岁 ' + r.qiyun.m + ' 月 ' + r.qiyun.d + ' 天</b>' +
@@ -1337,10 +1426,10 @@ function dyHtml(r){
   return qy +
     '<div class="wheel"><svg viewBox="0 0 344 344" role="img" aria-label="大运圆盘">' +
       '<circle class="ring" cx="' + CX + '" cy="' + CY + '" r="' + R + '"/>' +
-      center + nodes + '</svg></div>' +
+      center + season + nodes + '</svg></div>' +
     '<div class="wlg">' + (r.qiyun
       ? '<span>「起」起运</span><span>「今」现在</span><span>点地支看该运流年</span>'
-      : '<span>「起」起运</span><span>点地支看该运干支</span>') + '</div>';
+      : '<span>大运顺序</span><span>点地支看该运干支</span>') + '</div>';
 }
 
 function lnHtml(r){
