@@ -68,27 +68,38 @@ h1 span{color:var(--huo)}
 .wx .num{font-size:11px;color:var(--muted);text-align:right;letter-spacing:.3px}
 .wx .note{margin-top:9px;font-size:10.5px;color:var(--muted);letter-spacing:.3px}
 .sx{display:grid;grid-template-columns:minmax(0,1fr)}
-.dy{display:grid;grid-template-columns:minmax(0,1fr);min-width:0;border-top:1px solid var(--line2)}
-.dy .it{position:relative;display:grid;grid-template-columns:54px minmax(0,1fr) auto;align-items:center;gap:10px;
-  padding:7px 4px 7px 12px;border-bottom:1px solid var(--line);cursor:pointer;background:#fff}
-.dy .it .gz2{font-family:var(--serif);font-size:20px;font-weight:500;line-height:1.15;letter-spacing:1px;white-space:nowrap}
-.dy .it .gz2 i{font-style:normal}
-.dy .it .yr{font-size:11px;color:var(--mid);letter-spacing:.5px;font-variant-numeric:tabular-nums}
-.dy .it .ag{font-size:10.5px;color:var(--muted);text-align:right;letter-spacing:.5px}
-.dy .it.on{background:#FAF9F7}
-.dy .it.on::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--ink)}
+.wheel{display:flex;justify-content:center;padding:6px 0 2px}
+.wheel svg{width:344px;max-width:100%;height:auto}
+.wheel .ring{fill:none;stroke:var(--line);stroke-width:1}
+.wheel text{text-anchor:middle;font-family:var(--serif);fill:var(--ink)}
+.wheel .wz{font-size:17px;font-weight:500}
+.wheel .wg{font-size:10px;fill:#9A9A9A}
+.wheel .off{fill:#D2CDC6;font-size:17px}
+.wheel .wn{cursor:pointer}
+.wheel .nd{fill:#fff;stroke:var(--line);stroke-width:1}
+.wheel .wn.sel .nd{fill:var(--ink);stroke:var(--ink)}
+.wheel .wn.sel .wg,.wheel .wn.sel .wz{fill:#fff}
+.wheel .fst{fill:none;stroke:var(--ink);stroke-width:1;opacity:.5}
+.wheel .nowc{fill:#B4462F}
+.wheel .cg{font-size:26px;font-weight:500;letter-spacing:2px}
+.wheel .cy{font-size:11px;fill:var(--mid);font-variant-numeric:tabular-nums}
+.wheel .ca{font-size:10px;fill:#9A9A9A;letter-spacing:.5px}
+.wheel .mu{fill:var(--mu)}.wheel .huo{fill:var(--huo)}.wheel .tu{fill:var(--tu)}
+.wheel .jin{fill:var(--jin)}.wheel .shui{fill:var(--shui)}
+.wlg{display:flex;gap:16px;justify-content:center;font-size:9.5px;color:#9A9A9A;letter-spacing:1px;margin-top:1px}
 .qy{font-size:12px;color:var(--mid);letter-spacing:.5px;margin-bottom:9px}
 .qy b{font-family:var(--serif);color:var(--ink);font-weight:500}
-.ln{display:grid;grid-template-columns:minmax(0,1fr);border-top:1px solid var(--line2)}
-.ln .c{display:grid;grid-template-columns:78px minmax(0,1fr);align-items:center;border-bottom:1px solid var(--line);padding:5px 4px 5px 12px}
-.ln .c .y{font-size:11.5px;color:var(--muted);letter-spacing:.5px;font-variant-numeric:tabular-nums}
-.ln .c .g{font-family:var(--serif);font-size:17px;font-weight:500;letter-spacing:2px}
+.ln{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.ln .c{padding:7px 2px 6px;text-align:center;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.ln .c .y{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:.3px}
+.ln .c .g{font-family:var(--serif);font-size:15px;font-weight:500;letter-spacing:1px;margin-top:2px}
+@media (min-width:620px){.ln{grid-template-columns:repeat(10,minmax(0,1fr))}}
 .foot{margin-top:22px;padding-top:14px;border-top:1px solid var(--line);font-size:10.5px;color:var(--muted);line-height:1.9;letter-spacing:.4px;text-align:center}
 @media (max-width:400px){
   .pan .gz{font-size:27px}
   .pan .cang{font-size:10px}
   .pan .h{letter-spacing:1px}
-  .dy .it{grid-template-columns:50px minmax(0,1fr) auto;gap:6px}
+  .wheel svg{width:300px}
 }
 
 /* 四维分析 */
@@ -1191,7 +1202,7 @@ function run(){
   var hh = +$('bh').value, mi = +$('bmi').value;
   if (!(y >= 1900 && y <= 2100)){ alert('年份限 1900–2100'); return; }
   state.res = baziCompute(y, m, d, hh, mi, !!state.sex, !!state.zi);
-  state.dyIdx = 0;
+  state.dyIdx = nowIdx(state.res);
   render();
 }
 
@@ -1201,6 +1212,13 @@ function render(){
   OUT.innerHTML = metaHtml(r) + panHtml(r) +
     (gzMode ? (analysisHtml(r) + gzNote()) : (dyHtml(r) + lnHtml(r) + analysisHtml(r)));
   bindDy();
+}
+
+function nowIdx(r){
+  var cy = new Date().getFullYear(), hit = 0;
+  if (!r.daYun) return 0;
+  r.daYun.forEach(function(d, i){ if (cy >= d.startYear && cy <= d.endYear) hit = i; });
+  return hit;
 }
 
 function gzNote(){
@@ -1260,18 +1278,48 @@ function wxHtml(r){
 }
 
 function dyHtml(r){
-  var it = r.daYun.map(function(d, i){
-    var g = GAN[d.idx % 10], z = ZHI[d.idx % 12];
-    return '<div class="it' + (i === state.dyIdx ? ' on' : '') + '" data-i="' + i + '">' +
-      '<div class="gz2"><i class="' + wxCls(GAN_WX[d.idx % 10]) + '">' + g + '</i>' +
-      '<i class="' + wxCls(ZHI_WX[d.idx % 12]) + '">' + z + '</i></div>' +
-      '<div class="yr">' + d.startYear + '–' + d.endYear + '</div>' +
-      '<div class="ag">' + d.age + ' 岁起</div></div>';
-  }).join('');
+  var now = nowIdx(r);
+  var CX = 172, CY = 172, R = 126;
+  var own = {};
+  r.daYun.forEach(function(d, i){ own[d.idx % 12] = i; });
+
+  var nodes = '';
+  for (var zi = 0; zi < 12; zi++){
+    var ang = -Math.PI / 2 + zi * Math.PI / 6;
+    var x = CX + R * Math.cos(ang), y = CY + R * Math.sin(ang);
+    var i2 = own[zi];
+    if (i2 === undefined){
+      nodes += '<text class="wz off" x="' + x.toFixed(1) + '" y="' + (y + 6).toFixed(1) + '">' + ZHI[zi] + '</text>';
+      continue;
+    }
+    var d = r.daYun[i2];
+    var cls = 'wn' + (i2 === state.dyIdx ? ' sel' : '');
+    var first = (i2 === 0) ? '<circle class="fst" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="28"/>' : '';
+    var nowTag = (i2 === now && i2 !== state.dyIdx) ? '<circle class="nowc" cx="' + x.toFixed(1) + '" cy="' + (y + 34).toFixed(1) + '" r="3"/>' : '';
+    nodes += '<g class="' + cls + '" data-i="' + i2 + '">' + first +
+      '<circle class="nd" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="23"/>' +
+      '<text class="wg ' + wxCls(GAN_WX[d.idx % 10]) + '" x="' + x.toFixed(1) + '" y="' + (y - 3).toFixed(1) + '">' + GAN[d.idx % 10] + '</text>' +
+      '<text class="wz ' + wxCls(ZHI_WX[d.idx % 12]) + '" x="' + x.toFixed(1) + '" y="' + (y + 15).toFixed(1) + '">' + ZHI[d.idx % 12] + '</text>' +
+      nowTag + '</g>';
+  }
+
+  var cur = r.daYun[state.dyIdx];
+  var g2 = GAN[cur.idx % 10], z2 = ZHI[cur.idx % 12];
+  var center =
+    '<text class="cg" x="' + CX + '" y="158">' +
+      '<tspan class="' + wxCls(GAN_WX[cur.idx % 10]) + '">' + g2 + '</tspan>' +
+      '<tspan class="' + wxCls(ZHI_WX[cur.idx % 12]) + '">' + z2 + '</tspan></text>' +
+    '<text class="cy" x="' + CX + '" y="182">' + cur.startYear + '–' + cur.endYear + '</text>' +
+    '<text class="ca" x="' + CX + '" y="201">' + cur.age + ' 岁起' +
+      (state.dyIdx === now ? ' · 现在' : '') + '</text>';
+
   return '<div class="qy">起运 <b>' + r.qiyun.y + ' 岁 ' + r.qiyun.m + ' 月 ' + r.qiyun.d + ' 天</b>' +
     '（' + r.qiyun.date + ' 交运）· <b>' + r.direction + '</b>' +
     ' · 年柱' + r.pillars[0].gan + r.pillars[0].zhi + '</div>' +
-    '<div class="sx"><div class="dy">' + it + '</div></div>';
+    '<div class="wheel"><svg viewBox="0 0 344 344" role="img" aria-label="大运圆盘">' +
+      '<circle class="ring" cx="' + CX + '" cy="' + CY + '" r="' + R + '"/>' +
+      center + nodes + '</svg></div>' +
+    '<div class="wlg"><span>○ 起运</span><span>● 现在</span><span>点地支看该运流年</span></div>';
 }
 
 function lnHtml(r){
@@ -1282,12 +1330,12 @@ function lnHtml(r){
       '<div class="g"><span class="' + wxCls(GAN_WX[f.idx % 10]) + '">' + g + '</span>' +
       '<span class="' + wxCls(ZHI_WX[f.idx % 12]) + '">' + z + '</span></div></div>';
   }).join('');
-  return '<div class="sec-t" style="margin:20px 0 10px">流年 <span class="yn">' + d.startYear + '–' + (d.startYear + 9) + '</span></div>' +
+  return '<div class="sec-t" style="margin:22px 0 10px">流年 <span class="yn">' + d.startYear + '–' + (d.startYear + 9) + '</span></div>' +
     '<div class="ln">' + cells + '</div>';
 }
 
 function bindDy(){
-  var nodes = OUT.querySelectorAll('.dy .it');
+  var nodes = OUT.querySelectorAll('.wheel .wn');
   for (var i = 0; i < nodes.length; i++){
     nodes[i].addEventListener('click', function(){
       state.dyIdx = +this.getAttribute('data-i');
