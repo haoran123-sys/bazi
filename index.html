@@ -46,13 +46,16 @@ h1 span{color:var(--huo)}
 .meta .k{color:var(--muted);margin-right:6px;font-size:11.5px}
 .meta div:nth-child(odd){border-right:1px solid var(--line)}
 .meta div:nth-child(-n+2){border-bottom:1px solid var(--line)}
-.pan{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line2);margin-top:14px}
+.pan{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line2);margin:14px 0 12px}
 .pan .col{min-width:0;border-right:1px solid var(--line);padding:8px 4px 10px;text-align:center}
 .pan .col:last-child{border-right:0}
 .pan .h{font-size:10.5px;color:#9A9A9A;letter-spacing:3px;padding-bottom:6px;border-bottom:1px solid var(--line)}
 .pan .god{font-size:11px;color:var(--mid);margin:7px 0 3px;letter-spacing:1px}
 .pan .gz{font-family:var(--serif);font-weight:500;font-size:31px;line-height:1.18;letter-spacing:1px}
 .pan .gz .z{margin-top:2px}
+.pan .gz>div{position:relative}
+.pan .gz .tg{position:absolute;left:50%;margin-left:13px;top:-1px;display:flex;flex-direction:column;font-family:var(--serif);font-style:normal;font-size:9.5px;line-height:1.06;color:#8C8C8C;letter-spacing:-.6px;white-space:nowrap}
+.pan .gz .tg b{font-weight:400}
 .pan .cang{margin-top:8px;display:flex;flex-direction:column;gap:1px;font-size:10.5px;color:var(--mid)}
 .pan .cang i{font-style:normal;color:var(--muted);font-size:9.5px;margin-left:2px}
 .pan .cs{margin-top:3px;font-size:10.5px;color:var(--muted);letter-spacing:.5px}
@@ -180,7 +183,7 @@ h1 span{color:var(--huo)}
   <div id="out"></div>
 
   <div class="foot">
-    起运按「三日折一年、一日折四月、一时辰折十天」，自起运年起每十年一运；流年以立春为岁首。<br>分析口径：强弱以月令（40／45）、通根本气（12）、天干（8–10）与余支计分，分值 -100 至 +100，0 为中和；格局按月令取格、透干者先取，顺逆用依《子平真诠》；调候依《穷通宝鉴》十干十二月用神，验其透藏；形象参考《三命通会》《渊海子平》两气成象与专旺之说。<br>农历输入按 1900–2100 农历表换算（含闰月）；干支直接输入不推起运大运。<br>
+    起运按「三日折一年、一日折四月、一时辰折十天」，自起运年起每十年一运；流年以立春为岁首。<br>分析口径：强弱以月令（40／45）、通根本气（12）、天干（8–10）与余支计分，分值 -100 至 +100，0 为中和；格局按月令取格、透干者先取，顺逆用依《子平真诠》；调候依《穷通宝鉴》十干十二月用神，验其透藏；形象参考《三命通会》《渊海子平》两气成象与专旺之说。<br>干支关系直接标于盘内干支之侧，如「冲月」即与月柱相冲、「克时」即与时干相克；地支只标相邻两柱。农历输入按 1900–2100 农历表逐日校核（含闰月）；干支直接输入不推起运大运。<br>
     浩然四柱八字排盘 · 仅供研习参考
   </div>
 </div>
@@ -1190,10 +1193,14 @@ function $(id){ return document.getElementById(id); }
 
 function wxCls(w){ return WX_CLASS[w]; }
 
-function gzHtml(idx){
+function gzHtml(idx, gTags, zTags){
   var g = GAN[idx % 10], z = ZHI[idx % 12];
-  return '<div class="gz"><div class="' + wxCls(GAN_WX[idx % 10]) + '">' + g + '</div>' +
-         '<div class="z ' + wxCls(ZHI_WX[idx % 12]) + '">' + z + '</div></div>';
+  function tag(list){
+    if (!list || !list.length) return '';
+    return '<em class="tg">' + list.map(function(t){ return '<b>' + t + '</b>'; }).join('') + '</em>';
+  }
+  return '<div class="gz"><div class="' + wxCls(GAN_WX[idx % 10]) + '">' + g + tag(gTags) + '</div>' +
+         '<div class="z ' + wxCls(ZHI_WX[idx % 12]) + '">' + z + tag(zTags) + '</div></div>';
 }
 
 function run(){
@@ -1223,7 +1230,7 @@ function run(){
 function render(){
   var r = state.res;
   var gzMode = (r.mode === 'gz');
-  OUT.innerHTML = metaHtml(r) + panHtml(r) + relHtml(r) +
+  OUT.innerHTML = metaHtml(r) + panHtml(r) +
     (gzMode ? (dyHtml(r) + analysisHtml(r) + gzNote()) : (dyHtml(r) + lnHtml(r) + analysisHtml(r)));
   bindDy();
 }
@@ -1260,8 +1267,27 @@ function metaHtml(r){
   }).join('') + '</div>';
 }
 
+function panTags(r){
+  var PL = ['年','月','日','时'], p = r.pillars;
+  var gt = [[], [], [], []], zt = [[], [], [], []];
+  for (var i = 0; i < 4; i++){
+    for (var j = i + 1; j < 4; j++){
+      ganRels(p[i].idx % 10, p[j].idx % 10).forEach(function(c){
+        gt[i].push(c + PL[j]); gt[j].push(c + PL[i]);
+      });
+    }
+    if (i < 3){
+      zhiRels(p[i].idx % 12, p[i + 1].idx % 12).forEach(function(c){
+        zt[i].push(c + PL[i + 1]); zt[i + 1].push(c + PL[i]);
+      });
+    }
+  }
+  function uniq(a){ var o = []; a.forEach(function(v){ if (o.indexOf(v) < 0) o.push(v); }); return o; }
+  return {gan: gt.map(uniq), zhi: zt.map(uniq)};
+}
 function panHtml(r){
   var labels = ['年柱', '月柱', '日柱', '时柱'];
+  var tags = panTags(r);
   var cols = r.pillars.map(function(p, i){
     var cang = p.cang.map(function(c){
       return '<div><span class="' + c.wx + '">' + c.gan + '</span><i>' + c.god + '</i></div>';
@@ -1270,7 +1296,7 @@ function panHtml(r){
     return '<div class="col">' +
       '<div class="h">' + labels[i] + '</div>' +
       '<div class="god">' + (i === 2 ? '日元' : p.god) + '</div>' +
-      gzHtml(p.idx) +
+      gzHtml(p.idx, tags.gan[i], tags.zhi[i]) +
       '<div class="cang">' + cang + '</div>' +
       '<div class="cs">星运 ' + p.cs + '</div>' +
       '<div class="cs">自坐 ' + p.selfSeat + '</div>' +
