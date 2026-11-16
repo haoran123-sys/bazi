@@ -1,0 +1,26 @@
+name: update-site
+on:
+  push:
+    branches: [ gh-pages ]
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+      - name: Fetch and verify
+        run: |
+          curl -fsSL -o /tmp/new.html "https://aka.doubaocdn.com/s/8LtCP08xHG"
+          md5sum /tmp/new.html
+          echo "85582e066ddbfa29e0932a63363b556a  /tmp/new.html" | md5sum -c -
+          cp /tmp/new.html ./index.html
+      - name: Commit and push
+        run: |
+          git config user.name "haoran123-sys"
+          git config user.email "haoran123-sys@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then echo "no change"; else git commit -m "feat: inline relations tags on the chart columns"; git push origin HEAD:gh-pages; fi
