@@ -20,6 +20,7 @@ header{text-align:center;padding:6px 0 18px}
 h1{font-family:var(--serif);font-weight:500;font-size:26px;line-height:1.35;letter-spacing:5px;text-indent:5px;margin:0}
 h1 span{color:var(--huo)}
 .sub{margin:10px 0 0;font-family:var(--serif);font-weight:400;font-size:11px;color:#9A9A9A;letter-spacing:4px;text-indent:4px}
+.sec-t .yn{letter-spacing:1px;font-variant-numeric:tabular-nums;color:var(--mid)}
 .sec-t{display:flex;align-items:center;gap:10px;font-size:10.5px;color:#9A9A9A;letter-spacing:3.5px;margin:0 0 10px}
 .sec-t:after{content:"";flex:1;height:1px;background:var(--line)}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -67,28 +68,27 @@ h1 span{color:var(--huo)}
 .wx .num{font-size:11px;color:var(--muted);text-align:right;letter-spacing:.3px}
 .wx .note{margin-top:9px;font-size:10.5px;color:var(--muted);letter-spacing:.3px}
 .sx{display:grid;grid-template-columns:minmax(0,1fr)}
-.dy{display:flex;overflow-x:auto;min-width:0;border:1px solid var(--line2);border-right:0}
-.dy .it{flex:0 0 76px;text-align:center;padding:9px 2px 10px;border-right:1px solid var(--line);cursor:pointer;background:#fff}
-.dy .it .gz{font:600 20px/1.2 "Songti SC","SimSun",Georgia,serif;letter-spacing:1px}
-.dy .it .yr{font-size:10px;color:var(--muted);margin-top:5px;font-variant-numeric:tabular-nums}
-.dy .it .ag{font-size:10px;color:var(--mid);margin-top:1px}
-.dy .it.on{background:var(--ink)}
-.dy .it.on .gz,.dy .it.on .yr,.dy .it.on .ag{color:#fff}
-.dy .it.on .yr,.dy .it.on .ag{opacity:.75}
+.dy{display:grid;grid-template-columns:minmax(0,1fr);min-width:0;border-top:1px solid var(--line2)}
+.dy .it{position:relative;display:grid;grid-template-columns:54px minmax(0,1fr) auto;align-items:center;gap:10px;
+  padding:7px 4px 7px 12px;border-bottom:1px solid var(--line);cursor:pointer;background:#fff}
+.dy .it .gz2{font-family:var(--serif);font-size:20px;font-weight:500;line-height:1.15;letter-spacing:1px;white-space:nowrap}
+.dy .it .gz2 i{font-style:normal}
+.dy .it .yr{font-size:11px;color:var(--mid);letter-spacing:.5px;font-variant-numeric:tabular-nums}
+.dy .it .ag{font-size:10.5px;color:var(--muted);text-align:right;letter-spacing:.5px}
+.dy .it.on{background:#FAF9F7}
+.dy .it.on::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--ink)}
 .qy{font-size:12px;color:var(--mid);letter-spacing:.5px;margin-bottom:9px}
 .qy b{font-family:var(--serif);color:var(--ink);font-weight:500}
-.ln{margin-top:12px;border:1px solid var(--line);display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
-.ln .c{padding:8px 2px;text-align:center;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
-.ln .c:nth-child(5n){border-right:0}
-.ln .c:nth-last-child(-n+5){border-bottom:0}
-.ln .c .y{font-size:10px;color:var(--muted)}
-.ln .c .g{font:600 15px/1.4 "Songti SC","SimSun",Georgia,serif;letter-spacing:1px;margin-top:2px}
+.ln{display:grid;grid-template-columns:minmax(0,1fr);border-top:1px solid var(--line2)}
+.ln .c{display:grid;grid-template-columns:78px minmax(0,1fr);align-items:center;border-bottom:1px solid var(--line);padding:5px 4px 5px 12px}
+.ln .c .y{font-size:11.5px;color:var(--muted);letter-spacing:.5px;font-variant-numeric:tabular-nums}
+.ln .c .g{font-family:var(--serif);font-size:17px;font-weight:500;letter-spacing:2px}
 .foot{margin-top:22px;padding-top:14px;border-top:1px solid var(--line);font-size:10.5px;color:var(--muted);line-height:1.9;letter-spacing:.4px;text-align:center}
 @media (max-width:400px){
   .pan .gz{font-size:27px}
   .pan .cang{font-size:10px}
   .pan .h{letter-spacing:1px}
-  .dy .it{flex:0 0 68px}
+  .dy .it{grid-template-columns:50px minmax(0,1fr) auto;gap:6px}
 }
 
 /* 四维分析 */
@@ -1190,8 +1190,8 @@ function run(){
 function render(){
   var r = state.res;
   var gzMode = (r.mode === 'gz');
-  OUT.innerHTML = metaHtml(r) + panHtml(r) + analysisHtml(r) +
-    (gzMode ? gzNote() : (dyHtml(r) + lnHtml(r)));
+  OUT.innerHTML = metaHtml(r) + panHtml(r) +
+    (gzMode ? (analysisHtml(r) + gzNote()) : (dyHtml(r) + lnHtml(r) + analysisHtml(r)));
   bindDy();
 }
 
@@ -1253,8 +1253,10 @@ function wxHtml(r){
 
 function dyHtml(r){
   var it = r.daYun.map(function(d, i){
+    var g = GAN[d.idx % 10], z = ZHI[d.idx % 12];
     return '<div class="it' + (i === state.dyIdx ? ' on' : '') + '" data-i="' + i + '">' +
-      gzHtml(d.idx) +
+      '<div class="gz2"><i class="' + wxCls(GAN_WX[d.idx % 10]) + '">' + g + '</i>' +
+      '<i class="' + wxCls(ZHI_WX[d.idx % 12]) + '">' + z + '</i></div>' +
       '<div class="yr">' + d.startYear + '–' + d.endYear + '</div>' +
       '<div class="ag">' + d.age + ' 岁起</div></div>';
   }).join('');
@@ -1272,7 +1274,7 @@ function lnHtml(r){
       '<div class="g"><span class="' + wxCls(GAN_WX[f.idx % 10]) + '">' + g + '</span>' +
       '<span class="' + wxCls(ZHI_WX[f.idx % 12]) + '">' + z + '</span></div></div>';
   }).join('');
-  return '<div class="sec-t" style="margin:18px 0 10px">流年 · ' + d.startYear + '–' + (d.startYear + 9) + '</div>' +
+  return '<div class="sec-t" style="margin:20px 0 10px">流年 <span class="yn">' + d.startYear + '–' + (d.startYear + 9) + '</span></div>' +
     '<div class="ln">' + cells + '</div>';
 }
 
