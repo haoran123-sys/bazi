@@ -1293,7 +1293,8 @@ function dyHtml(r){
 
   var nodes = '';
   for (var zi = 0; zi < 12; zi++){
-    var ang = -Math.PI / 2 + zi * Math.PI / 6;
+    /* 十二支依罗盘方位固定：子北在下、午南在上、卯东在左、酉西在右 */
+    var ang = Math.PI / 2 + zi * Math.PI / 6;
     var x = CX + R * Math.cos(ang), y = CY + R * Math.sin(ang);
     var i2 = own[zi];
     if (i2 === undefined){
