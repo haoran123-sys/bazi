@@ -1,0 +1,26 @@
+name: update-site
+on:
+  push:
+    branches: [ gh-pages ]
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+      - name: Fetch and verify
+        run: |
+          curl -fsSL -o /tmp/new.html "https://aka.doubaocdn.com/s/hkwB46vnZm"
+          md5sum /tmp/new.html
+          echo "e2d1931639079a1fa51c6c1e958b22e7  /tmp/new.html" | md5sum -c -
+          cp /tmp/new.html ./index.html
+      - name: Commit and push
+        run: |
+          git config user.name "haoran123-sys"
+          git config user.email "haoran123-sys@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then echo "no change"; else git commit -m "copy: shorten four-dimension analysis text"; git push origin HEAD:gh-pages; fi
