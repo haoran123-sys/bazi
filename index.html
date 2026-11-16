@@ -439,13 +439,21 @@ function baziFromGZ(yIdx, mIdx, dIdx, hIdx, male){
   ];
   var core = panCore(pIllars);
   var monthZhi = mIdx % 12;
+  var yangYear = (yIdx % 10) % 2 === 0;
+  var forward = (yangYear && male) || (!yangYear && !male);
+  var dy = [];
+  for (var i = 1; i <= 10; i++){
+    var k = ((mIdx + (forward ? i : -i)) % 60 + 60) % 60;
+    dy.push({idx: k, startYear: null, endYear: null, age: null, flows: null});
+  }
   return {
     mode: 'gz',
     pillars: core.pillars,
     dayGan: core.dayGan,
     kong: core.kong,
     kongStr: ZHI[core.kong[0]] + ZHI[core.kong[1]],
-    direction: '', daYun: null, qiyun: null,
+    direction: forward ? '顺行' : '逆行',
+    daYun: dy, qiyun: null,
     power: core.power,
     count: core.count,
     shensha: core.shensha,
@@ -1210,7 +1218,7 @@ function render(){
   var r = state.res;
   var gzMode = (r.mode === 'gz');
   OUT.innerHTML = metaHtml(r) + panHtml(r) +
-    (gzMode ? (analysisHtml(r) + gzNote()) : (dyHtml(r) + lnHtml(r) + analysisHtml(r)));
+    (gzMode ? (dyHtml(r) + analysisHtml(r) + gzNote()) : (dyHtml(r) + lnHtml(r) + analysisHtml(r)));
   bindDy();
 }
 
@@ -1222,8 +1230,8 @@ function nowIdx(r){
 }
 
 function gzNote(){
-  return '<div class="hint" style="margin-top:14px">干支直接输入：四柱既定，格局强弱调候形象可断；' +
-    '无出生时刻，故不推起运与大运流年。</div>';
+  return '<div class="hint" style="margin-top:14px">干支直接输入：四柱既定，大运按年干阴阳与性别顺逆排；' +
+    '无出生时刻，故起运岁数与流年暂缺。</div>';
 }
 
 function metaHtml(r){
@@ -1305,21 +1313,30 @@ function dyHtml(r){
 
   var cur = r.daYun[state.dyIdx];
   var g2 = GAN[cur.idx % 10], z2 = ZHI[cur.idx % 12];
+  var cYr = (cur.startYear !== null)
+    ? '<text class="cy" x="' + CX + '" y="182">' + cur.startYear + '–' + cur.endYear + '</text>' +
+      '<text class="ca" x="' + CX + '" y="201">' + cur.age + ' 岁起' +
+        (state.dyIdx === now ? ' · 现在' : '') + '</text>'
+    : '<text class="cy" x="' + CX + '" y="182">' + r.direction + '</text>' +
+      '<text class="ca" x="' + CX + '" y="201">起运待定</text>';
   var center =
     '<text class="cg" x="' + CX + '" y="158">' +
       '<tspan class="' + wxCls(GAN_WX[cur.idx % 10]) + '">' + g2 + '</tspan>' +
       '<tspan class="' + wxCls(ZHI_WX[cur.idx % 12]) + '">' + z2 + '</tspan></text>' +
-    '<text class="cy" x="' + CX + '" y="182">' + cur.startYear + '–' + cur.endYear + '</text>' +
-    '<text class="ca" x="' + CX + '" y="201">' + cur.age + ' 岁起' +
-      (state.dyIdx === now ? ' · 现在' : '') + '</text>';
+    cYr;
 
-  return '<div class="qy">起运 <b>' + r.qiyun.y + ' 岁 ' + r.qiyun.m + ' 月 ' + r.qiyun.d + ' 天</b>' +
-    '（' + r.qiyun.date + ' 交运）· <b>' + r.direction + '</b>' +
-    ' · 年柱' + r.pillars[0].gan + r.pillars[0].zhi + '</div>' +
+  var qy = r.qiyun
+    ? '<div class="qy">起运 <b>' + r.qiyun.y + ' 岁 ' + r.qiyun.m + ' 月 ' + r.qiyun.d + ' 天</b>' +
+      '（' + r.qiyun.date + ' 交运）· <b>' + r.direction + '</b>' +
+      ' · 年柱' + r.pillars[0].gan + r.pillars[0].zhi + '</div>'
+    : '<div class="qy">大运 <b>' + r.direction + '</b>（按年干阴阳与性别排）· 无出生时刻，起运岁数待定</div>';
+  return qy +
     '<div class="wheel"><svg viewBox="0 0 344 344" role="img" aria-label="大运圆盘">' +
       '<circle class="ring" cx="' + CX + '" cy="' + CY + '" r="' + R + '"/>' +
       center + nodes + '</svg></div>' +
-    '<div class="wlg"><span>○ 起运</span><span>● 现在</span><span>点地支看该运流年</span></div>';
+    '<div class="wlg">' + (r.qiyun
+      ? '<span>○ 起运</span><span>● 现在</span><span>点地支看该运流年</span>'
+      : '<span>○ 起运</span><span>点地支看该运干支</span>') + '</div>';
 }
 
 function lnHtml(r){
