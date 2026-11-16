@@ -1397,7 +1397,7 @@ function rebuildLunarMonth(){
   var ly = +$('ly').value, lm = $('lm'), keep = +lm.value;
   var order = lunarOrder(ly);
   lm.innerHTML = order.map(function(m){
-    var lab = (m < 0 ? '闰' : '') + MONTH_CN[Math.abs(m)] + '月';
+    var lab = (m < 0 ? '闰' : '') + MONTH_CN[Math.abs(m) - 1] + '月';
     return '<option value="' + m + '">' + lab + '</option>';
   }).join('');
   if (order.indexOf(keep) >= 0) lm.value = String(keep);
@@ -1419,7 +1419,7 @@ function updateLunarHint(){
   if (!sol){ h.textContent = '农历 ' + ly + ' 年无此月或日数超出，请重新选择'; return; }
   var info = LUNAR[ly];
   h.innerHTML = '对应公历 <b style="color:#161616">' + sol[0] + '-' + pad2(sol[1]) + '-' + pad2(sol[2]) + '</b>' +
-    ' · 该年' + (info[1] ? '闰' + MONTH_CN[info[1]] + '月，' : '无闰月，') +
+    ' · 该年' + (info[1] ? '闰' + MONTH_CN[info[1] - 1] + '月，' : '无闰月，') +
     '此月' + lunarLen(ly, ms) + '天';
 }
 
